@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🏎️ Vocab Racer – Blue Line 2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh; color: white; overflow-x: hidden;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; padding: 20px; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+#home.active { justify-content: center; text-align: center; }
+
+/* ── HOME ── */
+#home h1 { font-size: clamp(2rem,8vw,3.5rem); margin-bottom: 6px; text-shadow: 0 0 20px #f39c12; }
+#home .subtitle { font-size: clamp(0.9rem,3vw,1.1rem); color: #aaa; margin-bottom: 28px; }
+
+.section-label {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+  color: #f39c12; margin-bottom: 8px; text-align: left; width: 100%; max-width: 520px;
+}
+
+/* Direction toggle */
+.dir-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+.dir-btn {
+  background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px; padding: 10px 16px; color: white; cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; transition: all 0.2s; touch-action: manipulation;
+}
+.dir-btn.active { background: #3498db; border-color: #3498db; box-shadow: 0 0 15px rgba(52,152,219,0.5); }
+
+/* Mode grid */
+.mode-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; width: 100%; max-width: 520px; margin-bottom: 20px; }
+.mode-btn {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 14px; padding: 14px 10px; font-size: 0.9rem; font-weight: 700;
+  color: white; cursor: pointer; transition: all 0.2s; touch-action: manipulation; text-align: center;
+}
+.mode-btn .mode-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.mode-btn.active { background: linear-gradient(135deg,#8e44ad,#6c3483); border-color: #8e44ad; box-shadow: 0 0 15px rgba(142,68,173,0.5); }
+.mode-btn:active { transform: scale(0.96); }
+
+/* Difficulty */
+.diff-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+.diff-btn {
+  flex: 1; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 10px 8px; color: white; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; transition: all 0.2s; touch-action: manipulation; text-align: center;
+}
+.diff-btn.easy.active  { background: #27ae60; border-color: #27ae60; }
+.diff-btn.mid.active   { background: #f39c12; border-color: #f39c12; }
+.diff-btn.hard.active  { background: #e74c3c; border-color: #e74c3c; }
+
+/* Unit grid */
+.unit-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; width: 100%; max-width: 520px; margin-bottom: 24px; }
+.unit-btn {
+  background: linear-gradient(135deg,#e74c3c,#c0392b); border: none; border-radius: 14px;
+  padding: 18px 8px; font-size: 1rem; font-weight: 700; color: white; cursor: pointer;
+  box-shadow: 0 4px 15px rgba(231,76,60,0.4); transition: transform 0.15s,box-shadow 0.15s;
+  touch-action: manipulation;
+}
+.unit-btn:active { transform: scale(0.95); }
+.unit-btn.all-btn {
+  grid-column: 1 / -1; background: linear-gradient(135deg,#f39c12,#e67e22);
+  box-shadow: 0 4px 15px rgba(243,156,18,0.4); font-size: 1.1rem;
+}
+.unit-btn.error-btn {
+  grid-column: 1 / -1; background: linear-gradient(135deg,#8e44ad,#6c3483);
+  box-shadow: 0 4px 15px rgba(142,68,173,0.4); font-size: 1rem;
+}
+
+/* Milestones preview */
+.milestones-preview {
+  background: rgba(255,255,255,0.05); border-radius: 14px;
+  padding: 14px 18px; max-width: 520px; width: 100%;
+  font-size: 0.85rem; color: #ccc; text-align: left;
+}
+.milestones-preview h3 { color: #f39c12; margin-bottom: 8px; }
+.milestone-item { padding: 3px 0; }
+
+/* ── GAME SCREEN ── */
+#game.active { display: block; }
+#game { padding: 16px; }
+
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(0,0,0,0.3); border-radius: 14px; padding: 12px 16px;
+  margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+}
+.hud-item { text-align: center; }
+.hud-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
+.hud-value { font-size: 1.3rem; font-weight: 800; color: #f39c12; }
+.hud-streak { color: #e74c3c; }
+
+.mode-badge {
+  text-align: center; font-size: 0.8rem; color: #8e44ad;
+  background: rgba(142,68,173,0.15); border-radius: 8px;
+  padding: 4px 10px; margin-bottom: 10px; font-weight: 600;
+}
+
+.track-bar {
+  background: rgba(255,255,255,0.1); border-radius: 100px;
+  height: 18px; margin-bottom: 18px; overflow: hidden; position: relative;
+}
+.track-fill {
+  height: 100%; background: linear-gradient(90deg,#27ae60,#2ecc71);
+  border-radius: 100px; transition: width 0.4s ease;
+}
+.car { position: absolute; top: -3px; font-size: 22px; transition: left 0.4s ease; }
+
+.question-card {
+  background: rgba(255,255,255,0.08); border-radius: 20px;
+  padding: 26px 22px; margin-bottom: 18px; text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.question-unit  { font-size: 0.8rem; color: #aaa; margin-bottom: 6px; }
+.question-dir   { font-size: 0.8rem; color: #3498db; margin-bottom: 14px; }
+.question-word  { font-size: clamp(1.4rem,6vw,2.2rem); font-weight: 800; color: white; line-height: 1.3; }
+
+/* ── MULTIPLE CHOICE ── */
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.ans-btn {
+  background: linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05));
+  border: 2px solid rgba(255,255,255,0.2); border-radius: 16px;
+  padding: 18px 12px; font-size: clamp(0.85rem,3vw,1.05rem); font-weight: 600;
+  color: white; cursor: pointer; transition: all 0.2s; line-height: 1.4;
+  touch-action: manipulation; min-height: 64px;
+}
+.ans-btn:active { transform: scale(0.97); }
+.ans-btn.correct { background: linear-gradient(135deg,#27ae60,#2ecc71); border-color: #27ae60; transform: scale(1.03); }
+.ans-btn.wrong   { background: linear-gradient(135deg,#c0392b,#e74c3c); border-color: #c0392b; }
+.ans-btn.reveal  { background: linear-gradient(135deg,#27ae60,#2ecc71); border-color: #27ae60; }
+
+/* ── TYPING MODE ── */
+.type-area { margin-bottom: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.type-hint { font-size: 0.85rem; color: #f39c12; }
+.type-input {
+  width: 100%; max-width: 400px; background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.3); border-radius: 14px;
+  padding: 16px 18px; font-size: 1.2rem; font-weight: 600; color: white;
+  outline: none; text-align: center;
+}
+.type-input:focus { border-color: #3498db; }
+.type-input.correct-input { border-color: #27ae60; background: rgba(39,174,96,0.2); }
+.type-input.wrong-input   { border-color: #e74c3c; background: rgba(231,76,60,0.15); }
+.btn-submit {
+  background: linear-gradient(135deg,#3498db,#2980b9); border: none;
+  border-radius: 14px; padding: 14px 36px; font-size: 1.1rem; font-weight: 700;
+  color: white; cursor: pointer; touch-action: manipulation;
+}
+
+/* ── MATCHING MODE ── */
+.match-container {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
+}
+.match-col { display: flex; flex-direction: column; gap: 8px; }
+.match-item {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 12px; padding: 12px 10px; font-size: 0.9rem; font-weight: 600;
+  color: white; cursor: pointer; transition: all 0.2s; text-align: center; min-height: 52px;
+  display: flex; align-items: center; justify-content: center; line-height: 1.3;
+}
+.match-item.selected  { border-color: #f39c12; background: rgba(243,156,18,0.2); }
+.match-item.matched   { border-color: #27ae60; background: rgba(39,174,96,0.2); color: #2ecc71; cursor: default; }
+.match-item.wrong-match { border-color: #e74c3c; background: rgba(231,76,60,0.15); }
+
+/* ── SCRAMBLE MODE ── */
+.scramble-area { margin-bottom: 18px; text-align: center; }
+.scramble-letters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 14px; }
+.letter-btn {
+  background: linear-gradient(135deg,#8e44ad,#6c3483); border: none;
+  border-radius: 10px; padding: 12px 16px; font-size: 1.2rem; font-weight: 800;
+  color: white; cursor: pointer; transition: all 0.15s; min-width: 44px;
+  touch-action: manipulation;
+}
+.letter-btn:active { transform: scale(0.9); }
+.letter-btn.used { background: rgba(255,255,255,0.1); color: #555; cursor: default; }
+.scramble-answer {
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 14px; padding: 14px 18px; font-size: 1.2rem; font-weight: 700;
+  min-height: 54px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; flex-wrap: wrap; margin-bottom: 10px; color: white;
+}
+.scramble-answer.correct-scramble { border-color: #27ae60; background: rgba(39,174,96,0.2); }
+.scramble-answer.wrong-scramble   { border-color: #e74c3c; background: rgba(231,76,60,0.15); }
+.answer-letter {
+  background: rgba(255,255,255,0.2); border-radius: 8px;
+  padding: 4px 8px; font-size: 1.1rem; cursor: pointer;
+}
+.btn-clear {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 8px 18px; color: white; cursor: pointer;
+  font-size: 0.85rem; touch-action: manipulation; margin-right: 8px;
+}
+
+/* ── SPEED ROUND ── */
+.speed-timer-bar { background: rgba(255,255,255,0.1); border-radius: 100px; height: 14px; margin-bottom: 14px; overflow: hidden; }
+.speed-timer-fill { height: 100%; background: linear-gradient(90deg,#e74c3c,#f39c12); border-radius: 100px; transition: width 0.1s linear; }
+.speed-bonus { text-align: center; font-size: 0.9rem; color: #f39c12; margin-bottom: 8px; font-weight: 700; }
+
+/* ── FEEDBACK ── */
+.feedback { text-align: center; font-size: 1.1rem; font-weight: 700; min-height: 28px; margin-bottom: 10px; }
+.feedback.correct-fb { color: #2ecc71; }
+.feedback.wrong-fb   { color: #e74c3c; }
+
+#btn-back {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 10px 20px; color: white; cursor: pointer;
+  font-size: 0.9rem; margin-top: 8px; touch-action: manipulation;
+}
+
+/* ── ERROR LIST SCREEN ── */
+#errors.active { display: block; }
+#errors { padding: 16px; }
+.errors-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 8px;
+}
+.errors-header h2 { font-size: 1.4rem; }
+.btn-action {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px; padding: 9px 16px; color: white; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; touch-action: manipulation; transition: all 0.2s;
+}
+.btn-action:hover { background: rgba(255,255,255,0.2); }
+.btn-action.red   { border-color: #e74c3c; color: #e74c3c; }
+.btn-action.green { border-color: #27ae60; color: #2ecc71; }
+.btn-action.blue  { border-color: #3498db; color: #3498db; }
+
+.error-list { width: 100%; }
+.error-item {
+  background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px;
+  margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.error-words { display: flex; flex-direction: column; gap: 2px; }
+.error-en  { font-weight: 700; font-size: 1rem; }
+.error-de  { font-size: 0.85rem; color: #aaa; }
+.error-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.error-count { font-size: 0.8rem; color: #e74c3c; font-weight: 700; }
+.error-unit  { font-size: 0.75rem; color: #aaa; }
+.no-errors { text-align: center; color: #aaa; margin-top: 60px; font-size: 1.1rem; }
+
+/* ── MILESTONE POPUP ── */
+#milestone-popup {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 100; align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 30px;
+}
+#milestone-popup.show { display: flex; }
+#milestone-popup h2  { font-size: clamp(1.8rem,8vw,3rem); margin-bottom: 10px; }
+#milestone-popup p   { font-size: clamp(1rem,4vw,1.4rem); color: #f39c12; margin-bottom: 8px; }
+#milestone-popup .reward {
+  font-size: clamp(1.2rem,5vw,1.8rem); background: rgba(243,156,18,0.2);
+  border-radius: 14px; padding: 14px 20px; margin: 16px 0; border: 2px solid #f39c12;
+}
+#btn-continue {
+  background: linear-gradient(135deg,#27ae60,#2ecc71); border: none;
+  border-radius: 14px; padding: 16px 36px; font-size: 1.2rem; font-weight: 800;
+  color: white; cursor: pointer; margin-top: 16px; touch-action: manipulation;
+}
+
+/* confetti */
+.confetti-piece {
+  position: fixed; width: 10px; height: 10px; border-radius: 2px;
+  animation: confetti-fall 2.5s ease-in forwards; z-index: 200;
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Divider */
+.divider { width: 100%; max-width: 520px; border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0 12px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HOME SCREEN
+════════════════════════════════════════════ -->
+<div id="home" class="screen active">
+  <h1>🏎️ Vocab Racer</h1>
+  <p class="subtitle">Blue Line 2 · 527 Vokabeln · Units 1–6</p>
+
+  <!-- 1. Richtung -->
+  <div class="section-label">1️⃣ Richtung wählen</div>
+  <div class="dir-toggle" style="max-width:520px;width:100%;margin-bottom:18px;">
+    <button class="dir-btn active" onclick="setDir('de2en',this)">DE → EN</button>
+    <button class="dir-btn"       onclick="setDir('en2de',this)">EN → DE</button>
+    <button class="dir-btn"       onclick="setDir('mix',this)">Mix 🎲</button>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- 2. Modus -->
+  <div class="section-label">2️⃣ Lernmodus wählen</div>
+  <div class="mode-grid">
+    <button class="mode-btn active" onclick="setMode('mc',this)">
+      <span class="mode-icon">🔘</span>Multiple Choice
+    </button>
+    <button class="mode-btn" onclick="setMode('type',this)">
+      <span class="mode-icon">✍️</span>Lückentext / Tippen
+    </button>
+    <button class="mode-btn" onclick="setMode('match',this)">
+      <span class="mode-icon">🔗</span>Zuordnung
+    </button>
+    <button class="mode-btn" onclick="setMode('scramble',this)">
+      <span class="mode-icon">🔡</span>Buchstaben-Scramble
+    </button>
+    <button class="mode-btn" onclick="setMode('speed',this)" style="grid-column:1/-1;">
+      <span class="mode-icon">⏱️</span>Speed Round
+    </button>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- 3. Schwierigkeit (nur relevant für Tippen, adaptiv für alle) -->
+  <div class="section-label">3️⃣ Schwierigkeit</div>
+  <div class="diff-toggle" style="max-width:520px;width:100%;margin-bottom:18px;">
+    <button class="diff-btn easy active" onclick="setDiff('easy',this)">🟢 Einfach</button>
+    <button class="diff-btn mid"         onclick="setDiff('mid',this)">🟡 Mittel</button>
+    <button class="diff-btn hard"        onclick="setDiff('hard',this)">🔴 Schwer</button>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- 4. Unit -->
+  <div class="section-label">4️⃣ Unit wählen & loslegen!</div>
+  <div class="unit-grid">
+    <button class="unit-btn" onclick="startGame('Unit 1')">Unit 1</button>
+    <button class="unit-btn" onclick="startGame('Unit 2')">Unit 2</button>
+    <button class="unit-btn" onclick="startGame('Unit 3')">Unit 3</button>
+    <button class="unit-btn" onclick="startGame('Unit 4')">Unit 4</button>
+    <button class="unit-btn" onclick="startGame('Unit 5')">Unit 5</button>
+    <button class="unit-btn" onclick="startGame('Unit 6')">Unit 6</button>
+    <button class="unit-btn all-btn" onclick="startGame('Alle Units')">🏆 Alle Units</button>
+    <button class="unit-btn error-btn" id="btn-error-unit" onclick="startErrorGame()" style="display:none;">
+      🔁 Nur Fehlerwörter üben (<span id="error-count-badge">0</span>)
+    </button>
+  </div>
+
+  <!-- Belohnungen -->
+  <div class="milestones-preview">
+    <h3>🎁 Belohnungen</h3>
+    <div class="milestone-item">✅ 10 richtig → 🐻 Gummibärchen</div>
+    <div class="milestone-item">✅ 25 richtig → 🎮 30 Min Tablet</div>
+    <div class="milestone-item">✅ 50 richtig → 🍕 Wunschessen</div>
+    <div class="milestone-item">✅ 100 richtig → 🏆 Großer Preis!</div>
+  </div>
+
+  <br/>
+  <button class="btn-action blue" onclick="showErrors()" style="margin-bottom:10px;">📋 Fehlerliste anzeigen</button>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     GAME SCREEN
+════════════════════════════════════════════ -->
+<div id="game" class="screen">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-label">✅ Richtig</div>
+      <div class="hud-value" id="score-display">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">🔥 Streak</div>
+      <div class="hud-value hud-streak" id="streak-display">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">📚 Unit</div>
+      <div class="hud-value" id="unit-display">–</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">🎯 Gesamt</div>
+      <div class="hud-value" id="total-display">0</div>
+    </div>
+  </div>
+
+  <!-- Mode badge -->
+  <div class="mode-badge" id="mode-badge">🔘 Multiple Choice</div>
+
+  <!-- Speed timer (only visible in speed mode) -->
+  <div class="speed-timer-bar" id="speed-timer-bar" style="display:none;">
+    <div class="speed-timer-fill" id="speed-timer-fill" style="width:100%;"></div>
+  </div>
+  <div class="speed-bonus" id="speed-bonus" style="display:none;"></div>
+
+  <!-- Progress track -->
+  <div class="track-bar">
+    <div class="track-fill" id="track-fill" style="width:0%;"></div>
+    <div class="car" id="car-emoji" style="left:0%;">🏎️</div>
+  </div>
+
+  <!-- Question card -->
+  <div class="question-card">
+    <div class="question-unit" id="q-unit"></div>
+    <div class="question-dir"  id="q-dir"></div>
+    <div class="question-word" id="q-word">Laden…</div>
+  </div>
+
+  <!-- Dynamic answer area (filled by JS per mode) -->
+  <div id="answer-area"></div>
+
+  <div class="feedback" id="feedback"></div>
+  <button id="btn-back" onclick="goHome()">← Zurück</button>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     ERROR LIST SCREEN
+════════════════════════════════════════════ -->
+<div id="errors" class="screen">
+  <div class="errors-header" style="width:100%;max-width:600px;">
+    <h2>📋 Fehlerliste</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-action blue"  onclick="downloadErrors()">📥 Download</button>
+      <button class="btn-action red"   onclick="clearErrors()">🗑️ Löschen</button>
+      <button class="btn-action"       onclick="goHome()">← Zurück</button>
+    </div>
+  </div>
+  <div id="error-list-container" style="width:100%;max-width:600px;"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MILESTONE POPUP
+════════════════════════════════════════════ -->
+<div id="milestone-popup">
+  <div style="font-size:3.5rem" id="ms-emoji">🎉</div>
+  <h2 id="ms-title">Super!</h2>
+  <p id="ms-score"></p>
+  <div class="reward" id="ms-reward"></div>
+  <button id="btn-continue" onclick="closeMilestone()">Weiter! 🏎️</button>
+</div>
+
+
+<script>
+// ════════════════════════════════════════════════
+//  VOCAB DATA
+// ════════════════════════════════════════════════
+const VOCAB = {
+  "Unit 1": [
+    {en:"back",de:"zurück"},{en:"late",de:"(zu) spät"},{en:"Jamaica",de:"Jamaika"},
+    {en:"holiday",de:"Ferien; Urlaub"},{en:"fantastic",de:"fantastisch; großartig"},
+    {en:"grandparents",de:"Großeltern"},{en:"scarf",de:"Schal; Tuch"},
+    {en:"to be late",de:"zu spät kommen"},{en:"got up",de:"aufgestanden (simple past: to get up)"},
+    {en:"summer",de:"Sommer"},{en:"to take photos",de:"Fotos machen; fotografieren"},
+    {en:"took",de:"nahm (simple past: to take)"},{en:"to meet / met",de:"(sich) treffen"},
+    {en:"cousin",de:"Cousin; Cousine"},{en:"sang",de:"sang (simple past: to sing)"},
+    {en:"band",de:"Band; Musikgruppe"},{en:"to hear / heard",de:"hören"},
+    {en:"more",de:"mehr; weitere"},{en:"cricket",de:"Kricket"},
+    {en:"grandfather",de:"Großvater"},{en:"well",de:"gut"},
+    {en:"to feel / felt",de:"(sich) fühlen"},{en:"it",de:"ihn; ihm"},
+    {en:"What about ...?",de:"Und ...?; Was ist mit ...?"},{en:"to go tandem bike riding",de:"Tandem fahren"},
+    {en:"in front",de:"vorn"},{en:"made",de:"machte (simple past: to make)"},
+    {en:"ate",de:"aß (simple past: to eat)"},{en:"ice cream",de:"Eis; Eiscreme"},
+    {en:"It's Holly's turn.",de:"Holly ist dran."},{en:"him",de:"ihm; ihn"},
+    {en:"uncle",de:"Onkel"},{en:"aunt",de:"Tante"},
+    {en:"mother",de:"Mutter"},{en:"father",de:"Vater"},
+    {en:"sister",de:"Schwester"},{en:"brother",de:"Bruder"},
+    {en:"daughter",de:"Tochter"},{en:"beautiful",de:"wunderschön"},
+    {en:"sunshine",de:"Sonnenschein"},{en:"good vibes",de:"gute Stimmung"},
+    {en:"in the sun",de:"in der Sonne"},{en:"I can't wait",de:"ich kann es nicht abwarten"},
+    {en:"to lie",de:"liegen"},{en:"argument",de:"Auseinandersetzung; Streit"},
+    {en:"to borrow",de:"(sich) ausleihen"},{en:"to bring / brought",de:"mitbringen; bringen"},
+    {en:"to lose / lost",de:"verlieren"},{en:"to have (got) to",de:"müssen"},
+    {en:"surprised",de:"überrascht"},{en:"That's what happened.",de:"Das ist passiert."},
+    {en:"worried",de:"beunruhigt; besorgt"},{en:"unhappy",de:"unglücklich; traurig"},
+    {en:"found",de:"fand (simple past: to find)"},{en:"the same",de:"der gleiche; derselbe; gleich"},
+    {en:"I'm sorry.",de:"Es tut mir leid.; Entschuldigung."},{en:"angry",de:"wütend; zornig; böse"},
+    {en:"Never mind.",de:"Macht nichts.; Schon gut."},{en:"dialogue",de:"Dialog; Gespräch"},
+    {en:"lucky day",de:"Glückstag"},{en:"on the bus",de:"im Bus"},
+    {en:"to answer",de:"antworten; beantworten"},{en:"to forget / forgot",de:"vergessen"},
+    {en:"everything",de:"alles"},{en:"stop",de:"Haltestelle; Halt"},
+    {en:"to get off / got off",de:"aussteigen"},{en:"to finish",de:"beenden; erledigen; aufhören"},
+    {en:"to put",de:"stecken"},{en:"hand",de:"Hand"},
+    {en:"to phone",de:"anrufen; telefonieren"},{en:"company",de:"Unternehmen; Firma; Gesellschaft"},
+    {en:"first",de:"zuerst; als Erstes"},{en:"rang",de:"klingelte (simple past: to ring)"},
+    {en:"door",de:"Tür"},{en:"hearing",de:"Gehör"},
+    {en:"penny / pence",de:"Penny (brit. Währungseinheit)"},{en:"lemon",de:"Zitrone"},
+    {en:"battery",de:"Batterie; Akku"},{en:"wire",de:"Draht; Kabel"},
+    {en:"nail",de:"Nagel"},{en:"experiment",de:"Versuch; Experiment"},
+    {en:"at the campfire",de:"am Lagerfeuer"},{en:"we counted stars",de:"wir zählten die Sterne"},
+    {en:"we all slept in a tent",de:"wir schliefen alle in einem Zelt"},
+    {en:"on the sand",de:"im Sand"},{en:"with",de:"bei"},
+  ],
+  "Unit 2": [
+    {en:"bedroom",de:"Kinderzimmer; Schlafzimmer"},{en:"often",de:"oft; häufig"},
+    {en:"living room",de:"Wohnzimmer"},{en:"opposite",de:"gegenüber"},
+    {en:"usually",de:"normalerweise; gewöhnlich"},{en:"guinea pig",de:"Meerschweinchen"},
+    {en:"to empty the dishwasher",de:"die Spülmaschine ausräumen"},
+    {en:"to tidy",de:"aufräumen; in Ordnung bringen"},{en:"to clean",de:"sauber machen; putzen"},
+    {en:"cage",de:"Käfig"},{en:"to take out",de:"hinausbringen"},
+    {en:"before",de:"vor; bevor"},{en:"to load the dishwasher",de:"die Spülmaschine einräumen"},
+    {en:"cooking",de:"Kochen; Koch-"},{en:"never",de:"nie; niemals"},
+    {en:"to hoover",de:"staubsaugen"},{en:"kitchen",de:"Küche"},
+    {en:"bathroom",de:"Bad(ezimmer)"},{en:"to cook",de:"kochen"},
+    {en:"balcony",de:"Balkon"},{en:"garden",de:"Garten"},
+    {en:"always",de:"immer"},{en:"sometimes",de:"manchmal"},
+    {en:"to change",de:"verändern; ändern; wechseln"},{en:"wardrobe",de:"Kleiderschrank"},
+    {en:"shelf / shelves",de:"Regal; Regalbrett"},{en:"above",de:"über; oberhalb"},
+    {en:"wall",de:"Wand; Mauer"},{en:"desk",de:"Schreibtisch; Tisch"},
+    {en:"lamp",de:"Lampe"},{en:"poster",de:"Poster"},
+    {en:"to think / thought",de:"denken; glauben"},{en:"best",de:"am besten; beste; am liebsten"},
+    {en:"comic",de:"Comic(heft)"},{en:"carpet",de:"Teppich"},
+    {en:"better",de:"besser"},{en:"sports shop",de:"Sportgeschäft"},
+    {en:"table",de:"Tisch"},{en:"TV",de:"Fernseher"},
+    {en:"bed",de:"Bett"},{en:"chair",de:"Stuhl"},
+    {en:"trainer",de:"Turnschuh"},{en:"size",de:"Größe"},
+    {en:"foot / feet",de:"Fuß"},{en:"these",de:"diese"},
+    {en:"large",de:"groß"},{en:"cheap",de:"günstig; billig"},
+    {en:"than",de:"als"},{en:"those",de:"jene"},
+    {en:"to try on",de:"anprobieren"},{en:"next",de:"als Nächstes"},
+    {en:"T-shirt",de:"T-Shirt"},{en:"pretty",de:"hübsch"},
+    {en:"short",de:"kurz"},{en:"worse",de:"schlechter; schlimmer"},
+    {en:"UK",de:"Vereinigtes Königreich von Großbritannien und Nordirland"},
+    {en:"trainers",de:"Turnschuhe"},{en:"shoes",de:"Schuhe"},
+    {en:"shirt",de:"Hemd; Shirt"},{en:"pullover",de:"Pullover"},
+    {en:"dress",de:"Kleid"},{en:"coat",de:"Jacke"},
+    {en:"jeans",de:"Jeans"},{en:"style",de:"Stil"},
+    {en:"no matter",de:"egal; ganz gleich"},{en:"tank top",de:"ärmelloses T-Shirt"},
+    {en:"brand",de:"Marke"},{en:"to pick",de:"wählen"},
+    {en:"in the spotlight",de:"im Rampenlicht"},{en:"everywhere you go",de:"überall wo du hingehst"},
+    {en:"you do your own thing",de:"du machst dein eigenes Ding"},
+    {en:"bling",de:"schöne, teure Sachen"},{en:"everyone",de:"alle; jeder; zusammen"},
+    {en:"to have got",de:"haben; besitzen"},{en:"half past (seven)",de:"halb (acht)"},
+    {en:"to wash",de:"(sich) waschen; spülen"},{en:"work",de:"Arbeit"},
+    {en:"early",de:"früh"},{en:"past",de:"nach (bei Uhrzeitangaben)"},
+    {en:"quarter to/past",de:"Viertel vor/nach"},{en:"to look after",de:"aufpassen auf; hüten; sich kümmern um"},
+    {en:"worst",de:"schlimmste; schlechteste"},{en:"to bark",de:"bellen"},
+    {en:"to run away",de:"weglaufen"},{en:"to run / ran",de:"laufen; rennen; fahren"},
+    {en:"to learn",de:"lernen"},{en:"word",de:"Wort"},
+    {en:"to throw / threw",de:"werfen"},{en:"to sleep / slept",de:"schlafen"},
+    {en:"a busy day",de:"ein ausgefüllter Tag"},{en:"how to ...",de:"wie man ..."},
+    {en:"polite",de:"höflich"},{en:"Excuse me.",de:"Entschuldigung."},
+    {en:"queue",de:"Warteschlange"},{en:"crazy",de:"verrückt"},
+    {en:"escalator",de:"Rolltreppe"},{en:"to wake up",de:"aufwachen"},
+    {en:"at the end",de:"am Ende"},
+  ],
+  "Unit 3": [
+    {en:"life / lives",de:"Leben"},{en:"Poland",de:"Polen"},
+    {en:"sight",de:"Sehenswürdigkeit"},{en:"big wheel",de:"Riesenrad"},
+    {en:"German",de:"Deutscher; Deutsche; deutsch; aus Deutschland"},
+    {en:"to build / built",de:"bauen"},{en:"tower",de:"Turm"},
+    {en:"clock",de:"Uhr"},{en:"bridge",de:"Brücke"},
+    {en:"every",de:"alle"},{en:"museum",de:"Museum"},
+    {en:"about",de:"ungefähr; circa; etwa"},{en:"wax",de:"Wachs"},
+    {en:"figure",de:"Figur; Gestalt"},{en:"king",de:"König"},
+    {en:"queen",de:"Königin"},{en:"church",de:"Kirche"},
+    {en:"metre",de:"Meter"},{en:"high",de:"hoch; groß"},
+    {en:"up",de:"hinauf; oben; hoch"},{en:"height",de:"Höhe"},
+    {en:"fact",de:"Fakt; Tatsache"},{en:"diameter",de:"Durchmesser"},
+    {en:"step",de:"Stufe; Schritt"},{en:"lift",de:"Aufzug"},
+    {en:"bell",de:"Glocke"},{en:"Europe",de:"Europa"},
+    {en:"telephone box",de:"Telefonzelle"},{en:"tall",de:"hoch; groß"},
+    {en:"building",de:"Gebäude; Bauwerk"},{en:"floor",de:"Stockwerk; Etage"},
+    {en:"city centre",de:"Stadtzentrum; Stadtmitte"},{en:"tomorrow",de:"morgen"},
+    {en:"sure",de:"sicher"},{en:"which",de:"welche; was"},
+    {en:"near",de:"nah"},{en:"map",de:"Karte; Plan"},
+    {en:"information",de:"Information(en)"},{en:"visitor",de:"Besucher; Besucherin"},
+    {en:"shopping centre",de:"Einkaufszentrum"},{en:"market",de:"Markt"},
+    {en:"stadium",de:"Stadion"},{en:"park",de:"Park"},
+    {en:"cinema",de:"Kino"},{en:"to stand / stood",de:"stehen"},
+    {en:"at the moment",de:"im Moment; momentan"},{en:"to wait (for)",de:"warten (auf)"},
+    {en:"to read / read",de:"lesen; vorlesen"},{en:"message",de:"Nachricht; SMS"},
+    {en:"to drink / drank",de:"trinken"},{en:"trumpet",de:"Trompete"},
+    {en:"treasure hunt",de:"Schnitzeljagd; Schatzsuche"},{en:"into",de:"in; in ... hinein"},
+    {en:"souvenir",de:"Souvenir; Andenken"},{en:"on the right",de:"rechts; auf der rechten Seite"},
+    {en:"newspaper kiosk",de:"Zeitungsstand"},{en:"us",de:"uns; wir"},
+    {en:"to turn",de:"abbiegen"},{en:"across",de:"über"},
+    {en:"second",de:"zweite"},{en:"on the left",de:"links; auf der linken Seite"},
+    {en:"straight on",de:"geradeaus"},{en:"third",de:"dritte"},
+    {en:"behind",de:"hinter"},{en:"next to",de:"neben"},
+    {en:"in front of",de:"vor"},{en:"out of",de:"aus ... heraus"},
+    {en:"wizard",de:"Zauberer"},{en:"once upon a time",de:"es war einmal"},
+    {en:"all of",de:"ganz"},{en:"to check",de:"überprüfen; kontrollieren"},
+    {en:"to fly / flew",de:"fliegen"},{en:"top",de:"Spitze; oberer Teil; oberes Ende"},
+    {en:"to do magic",de:"zaubern"},{en:"pop",de:"Pop (Musik)"},
+    {en:"tourist",de:"Tourist; Touristin"},{en:"crown jewels",de:"Kronjuwelen"},
+    {en:"around",de:"um ... herum"},{en:"neck",de:"Hals; Nacken"},
+    {en:"to be fun",de:"Spaß machen; witzig sein"},{en:"without",de:"ohne"},
+    {en:"to correct",de:"richtigstellen; verbessern; korrigieren"},
+    {en:"when",de:"als; wenn"},{en:"southwest",de:"Südwesten"},
+    {en:"See you then.",de:"Bis dann."},
+  ],
+  "Unit 4": [
+    {en:"event",de:"Veranstaltung; Ereignis"},{en:"planner",de:"Kalender; Planer"},
+    {en:"lantern",de:"Laterne"},{en:"procession",de:"Umzug; Festzug"},
+    {en:"month",de:"Monat"},{en:"to make",de:"hier: basteln"},
+    {en:"own",de:"eigene"},{en:"school trip",de:"Klassenfahrt; Schulausflug"},
+    {en:"hostel",de:"Herberge; Hostel"},{en:"local",de:"örtlich; lokal; hiesig"},
+    {en:"fair",de:"Fest; Messe; Jahrmarkt"},{en:"to raise money",de:"Geld sammeln; Geld aufbringen"},
+    {en:"charity",de:"Wohltätigkeitsorganisation; wohltätige Zwecke"},
+    {en:"project",de:"Projekt"},{en:"sports day",de:"Sportfest"},
+    {en:"long jump",de:"Weitsprung"},{en:"that's why",de:"deshalb; deswegen"},
+    {en:"to invite",de:"einladen"},{en:"beginning",de:"Anfang; Beginn"},
+    {en:"must",de:"müssen"},{en:"bad",de:"schlimm"},
+    {en:"cold",de:"Erkältung; Kälte"},{en:"a little (bit)",de:"ein (kleines) bisschen; ein wenig"},
+    {en:"wash",de:"Wäsche"},{en:"other",de:"andere"},
+    {en:"face painting",de:"Schminken"},{en:"raffle",de:"Gewinnspiel; Tombola"},
+    {en:"prize",de:"Preis; Gewinn"},{en:"ticket",de:"Ticket; Eintrittskarte; Fahrschein"},
+    {en:"won",de:"gewann (simple past: to win)"},{en:"sold",de:"verkaufte (simple past: to sell)"},
+    {en:"hot dog",de:"Hotdog"},{en:"that",de:"dass"},
+    {en:"to miss",de:"verpassen; vermissen"},{en:"hard",de:"hart; schwer; schwierig"},
+    {en:"fourth",de:"vierte"},{en:"fifth",de:"fünfte"},
+    {en:"sixth",de:"sechste"},{en:"seventh",de:"siebte"},
+    {en:"eighth",de:"achte"},{en:"ninth",de:"neunte"},
+    {en:"tenth",de:"zehnte"},{en:"eleventh",de:"elfte"},
+    {en:"twelfth",de:"zwölfte"},{en:"thirteenth",de:"dreizehnte"},
+    {en:"twentieth",de:"zwanzigste"},{en:"thirtieth",de:"dreißigste"},
+    {en:"playing field",de:"Sportplatz"},{en:"warm-up",de:"Aufwärmtraining; Aufwärmen"},
+    {en:"200 metre race",de:"200-Meter-Lauf"},{en:"race",de:"Wettrennen; Rennen; Wettlauf"},
+    {en:"sack race",de:"Sackhüpfen"},{en:"medal",de:"Medaille"},
+    {en:"to last",de:"dauern; andauern"},{en:"hour",de:"Stunde"},
+    {en:"to take part (in)",de:"mitmachen (bei); teilnehmen (an)"},
+    {en:"minute",de:"Minute"},{en:"day",de:"Tag"},
+    {en:"week",de:"Woche"},{en:"year",de:"Jahr"},
+    {en:"Come on!",de:"Komm(t) jetzt!"},{en:"nearly",de:"fast; beinahe"},
+    {en:"transport",de:"Verkehr; Transport"},{en:"to put on",de:"anziehen"},
+    {en:"trick",de:"Streich"},{en:"tent",de:"Zelt"},
+    {en:"in the middle of",de:"mitten in"},{en:"outside",de:"außerhalb; außen; draußen"},
+    {en:"wolf / wolves",de:"Wolf"},{en:"maybe",de:"vielleicht"},
+    {en:"part",de:"Rolle; Teil"},{en:"to laugh",de:"lachen"},
+    {en:"others",de:"anderen"},{en:"to pass",de:"herüberreichen; reichen"},
+    {en:"Korean",de:"koreanisch"},{en:"snack food",de:"Snacks"},
+    {en:"delicious",de:"lecker; köstlich"},{en:"of course",de:"natürlich; selbstverständlich"},
+  ],
+  "Unit 5": [
+    {en:"player",de:"Spieler; Spielerin"},{en:"stage",de:"Bühne"},
+    {en:"Africa",de:"Afrika"},{en:"them",de:"ihnen"},
+    {en:"wrote",de:"schrieb (simple past: to write)"},{en:"mouth",de:"Mund"},
+    {en:"chimpanzee",de:"Schimpanse"},{en:"to fight / fought",de:"kämpfen; (sich) streiten"},
+    {en:"to stop",de:"beenden; aufhören; anhalten"},
+    {en:"all around the world",de:"in aller Welt"},{en:"to save",de:"retten; sparen"},
+    {en:"environment",de:"Umwelt; Umgebung"},{en:"e-mail",de:"E-Mail"},
+    {en:"to be lucky",de:"Glück haben"},{en:"restaurant",de:"Restaurant"},
+    {en:"to watch",de:"zuschauen; zusehen; beobachten"},{en:"chef",de:"Koch; Köchin; Küchenchef"},
+    {en:"to show",de:"zeigen"},{en:"quite",de:"ziemlich; ganz; völlig"},
+    {en:"meal",de:"Mahlzeit; Essen"},{en:"chicken fried rice",de:"gebratener Reis mit Hühnerfleisch"},
+    {en:"nobody",de:"niemand"},{en:"fast",de:"schnell"},
+    {en:"a cup of",de:"eine Tasse ..."},{en:"a piece of",de:"ein Stück ..."},
+    {en:"a bottle of",de:"eine Flasche ..."},{en:"oil",de:"Öl"},
+    {en:"to go skating",de:"inline skaten gehen; Schlittschuhlaufen gehen"},
+    {en:"still",de:"noch; immer noch"},{en:"hobby",de:"Hobby"},
+    {en:"to skate",de:"inlineskaten; Schlittschuh laufen"},{en:"quiet",de:"leise; ruhig; still"},
+    {en:"this morning",de:"heute Morgen"},{en:"her",de:"sie; ihr"},
+    {en:"Yours,",de:"Dein (Grußformel in Briefen oder E-Mails)"},
+    {en:"a bag of",de:"eine Tüte ..."},{en:"a box of",de:"eine Box; Schachtel ..."},
+    {en:"a kilo of",de:"ein Kilo ..."},{en:"Chinese",de:"chinesisch"},
+    {en:"noodle",de:"Nudel"},{en:"chow mein",de:"Chow Mein (chinesisches Gericht)"},
+    {en:"balling",de:"Ballspielen"},{en:"to go clubbing",de:"ausgehen"},
+    {en:"hugging",de:"umarmen"},{en:"grumpy",de:"mürrisch; schlecht gelaunt"},
+    {en:"at the doctor's",de:"beim Arzt"},{en:"to fall off",de:"von etw. stürzen; herunterfallen"},
+    {en:"to hurt",de:"verletzen; weh tun"},{en:"tooth / teeth",de:"Zahn"},
+    {en:"nose",de:"Nase"},{en:"arm",de:"Arm"},
+    {en:"head",de:"Kopf"},{en:"leg",de:"Bein"},
+    {en:"headache",de:"Kopfweh; Kopfschmerzen"},{en:"nothing",de:"nichts"},
+    {en:"serious",de:"ernst; schwer"},{en:"face",de:"Gesicht"},
+    {en:"eye",de:"Auge"},{en:"teen",de:"Jugend-; Teenager; Jugendliche"},
+    {en:"to test",de:"testen; prüfen"},{en:"roller coaster",de:"Achterbahn"},
+    {en:"ride",de:"Fahrt; Fahrgeschäft; Ritt"},{en:"theme park",de:"Freizeitpark"},
+    {en:"amazing",de:"erstaunlich; unglaublich; toll"},{en:"young",de:"jung"},
+    {en:"magician",de:"Zauberkünstler; Zauberkünstlerin"},{en:"all over",de:"in ganz; überall"},
+  ],
+  "Unit 6": [
+    {en:"Britain",de:"Großbritannien"},{en:"a thousand",de:"tausend; eintausend"},
+    {en:"to climb",de:"besteigen; klettern; steigen"},{en:"mountain",de:"Berg"},
+    {en:"to become / became",de:"(zu etw.) werden"},{en:"person",de:"Mensch; Person"},
+    {en:"side",de:"Seite"},{en:"continent",de:"Kontinent; Erdteil"},
+    {en:"Antarctica",de:"Antarktis"},{en:"to spend / spent",de:"verbringen (Zeit); ausgeben (Geld)"},
+    {en:"hospital",de:"Krankenhaus"},{en:"to hold / held",de:"halten; festhalten"},
+    {en:"acting workshop",de:"Schauspielworkshop"},{en:"drama",de:"Theater-"},
+    {en:"to believe",de:"glauben"},{en:"See you!",de:"Tschüss; Bis bald."},
+    {en:"captain",de:"Kapitän; Kapitänin; Mannschaftsführer"},
+    {en:"Guess what?",de:"Stellt euch vor!; Stell dir vor!"},
+    {en:"engineer",de:"Ingenieur; Ingenieurin; Techniker; Technikerin"},
+    {en:"to leave / left",de:"verlassen; lassen; abfahren; weggehen"},
+    {en:"soon",de:"bald"},{en:"will",de:"werden"},
+    {en:"so",de:"so; dermaßen"},{en:"far",de:"weit"},
+    {en:"to be a long way away",de:"weit weg sein"},
+    {en:"to hope (for)",de:"hoffen (auf)"},{en:"to agree (with)",de:"zustimmen; einer Meinung sein (mit)"},
+    {en:"pier",de:"Pier"},{en:"to move",de:"umziehen"},
+    {en:"news",de:"Neuigkeit(en); Nachricht(en)"},{en:"excited",de:"aufgeregt; begeistert"},
+    {en:"answer",de:"Antwort"},{en:"Congratulations!",de:"Glückwunsch!"},
+    {en:"That's too bad.",de:"Schade!"},{en:"Well done!",de:"Gut gemacht!"},
+    {en:"What's the weather like?",de:"Wie ist das Wetter?"},
+    {en:"weather",de:"Wetter; Witterung"},{en:"warm",de:"warm"},
+    {en:"sunny",de:"sonnig"},{en:"shorts",de:"Shorts; kurze Hose"},
+    {en:"mountain lion",de:"Puma"},{en:"rainy",de:"regnerisch"},
+    {en:"snow",de:"Schnee"},{en:"cloudy",de:"bewölkt; wolkig"},
+    {en:"season",de:"Jahreszeit; Saison"},{en:"hat",de:"Mütze; Hut"},
+    {en:"glove",de:"Handschuh"},{en:"bear",de:"Bär"},
+    {en:"snowy",de:"schneereich; verschneit"},{en:"sun",de:"Sonne"},
+    {en:"spring",de:"Frühling"},{en:"autumn",de:"Herbst"},
+    {en:"mild",de:"mild"},{en:"windy",de:"windig"},
+    {en:"rest",de:"Rest"},{en:"dry",de:"trocken"},
+    {en:"alligator",de:"Alligator"},{en:"cloud",de:"Wolke"},
+    {en:"United States",de:"Vereinigte Staaten"},{en:"wet",de:"nass"},
+    {en:"hot",de:"heiß"},{en:"winter",de:"Winter"},
+    {en:"leaving",de:"Abschieds-"},{en:"American",de:"amerikanisch; aus Amerika"},
+    {en:"muffin",de:"Muffin"},{en:"Is something wrong?",de:"Stimmt etwas nicht?"},
+    {en:"Well, ...",de:"Na ja, ...; Also ..."},{en:"won't",de:"nicht werden (will not)"},
+    {en:"to make friends",de:"Freundschaft(en) schließen"},{en:"silly",de:"albern"},
+    {en:"to chat",de:"chatten; plaudern"},{en:"online",de:"online; Online-"},
+    {en:"at the same time",de:"gleichzeitig; nebenher"},{en:"to upload",de:"hochladen"},
+    {en:"to keep in touch",de:"in Kontakt bleiben"},{en:"to keep / kept",de:"halten"},
+    {en:"See you.",de:"Wir sehen uns.; Bis bald.; Tschüss."},
+    {en:"ago",de:"vor"},{en:"to catch / caught",de:"fangen"},
+    {en:"to ask about",de:"fragen nach; sich erkundigen nach"},
+    {en:"everywhere",de:"überallhin; überall"},{en:"mall",de:"Einkaufspassage; Einkaufszentrum"},
+    {en:"kind",de:"Art; Sorte"},{en:"as well as",de:"sowohl ... als auch ..."},
+    {en:"to travel",de:"hier: fahren; reisen"},{en:"once",de:"einmal; einst"},
+    {en:"to understand / understood",de:"verstehen"},
+    {en:"grade",de:"Klasse; Jahrgangsstufe; Note"},
+    {en:"junior high school",de:"Junior Highschool (Mittelschule in den USA)"},
+    {en:"square dance",de:"Squaredance (amerikanischer Volkstanz)"},
+    {en:"wall painting",de:"Wandmalerei"},{en:"to paint",de:"bemalen; malen; streichen"},
+    {en:"design",de:"Design; Gestaltung; Entwurf"},{en:"soccer",de:"Fußball (amerikanisch)"},
+    {en:"American football",de:"American Football"},{en:"basketball",de:"Basketball"},
+    {en:"All the best,",de:"Alles Gute"},{en:"cave",de:"Höhle"},
+    {en:"grandad",de:"Opa"},{en:"to be called",de:"heißen; genannt werden"},
+    {en:"to stay away from",de:"sich fernhalten von"},
+    {en:"I think so too.",de:"Das denke ich auch."},{en:"I don't think so.",de:"Das glaube ich nicht."},
+  ]
+};
+
+const MILESTONES = [
+  { at:10,  emoji:"🐻", title:"Toll gemacht!",  reward:"🐻 Gummibärchen verdient!" },
+  { at:25,  emoji:"🎮", title:"Mega!",           reward:"🎮 30 Minuten Tablet spielen!" },
+  { at:50,  emoji:"🍕", title:"Unglaublich!",   reward:"🍕 Wunschessen aussuchen!" },
+  { at:100, emoji:"🏆", title:"CHAMPION!",       reward:"🏆 Großer Preis! Du rockst!" },
+];
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let pool=[], direction='de2en', gameMode='mc', difficulty='easy';
+let score=0, streak=0, totalAnswered=0, currentUnit='';
+let shownMilestones=new Set();
+let currentQ=null, answered=false;
+let speedTimer=null, speedTimeLeft=0;
+
+// Adaptive weight map: key = en word, value = weight (higher = more often)
+let weightMap = {};
+
+// Error storage key
+const LS_ERRORS = 'vocabRacer_errors_v2';
+
+// ════════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════════
+function setDir(d, btn) {
+  direction = d;
+  document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setMode(m, btn) {
+  gameMode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setDiff(d, btn) {
+  difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+//  ERROR LIST (localStorage)
+// ════════════════════════════════════════════════
+function loadErrors() {
+  try { return JSON.parse(localStorage.getItem(LS_ERRORS) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveErrors(errors) {
+  try { localStorage.setItem(LS_ERRORS, JSON.stringify(errors)); } catch(e){}
+}
+function recordError(vocab, unit) {
+  const errors = loadErrors();
+  const key = vocab.en;
+  if (!errors[key]) errors[key] = { en: vocab.en, de: vocab.de, unit: unit, count: 0, last: '' };
+  errors[key].count++;
+  errors[key].last = new Date().toLocaleDateString('de-DE');
+  saveErrors(errors);
+  updateErrorBadge();
+  // increase adaptive weight
+  // kein adaptives Gewicht
+}
+function updateErrorBadge() {
+  const errors = loadErrors();
+  const count = Object.keys(errors).length;
+  const badge = document.getElementById('error-count-badge');
+  const btn   = document.getElementById('btn-error-unit');
+  if (badge) badge.textContent = count;
+  if (btn)   btn.style.display = count > 0 ? 'block' : 'none';
+}
+function showErrors() {
+  showScreen('errors');
+  const errors = loadErrors();
+  const container = document.getElementById('error-list-container');
+  const keys = Object.keys(errors);
+  if (keys.length === 0) {
+    container.innerHTML = '<div class="no-errors">🎉 Keine Fehler gespeichert! Super!</div>';
+    return;
+  }
+  // Sort by count desc
+  const sorted = keys.map(k => errors[k]).sort((a,b) => b.count - a.count);
+  container.innerHTML = '<div class="error-list">' + sorted.map(e => `
+    <div class="error-item">
+      <div class="error-words">
+        <div class="error-en">${e.en}</div>
+        <div class="error-de">${e.de}</div>
+      </div>
+      <div class="error-meta">
+        <div class="error-count">❌ ${e.count}× falsch</div>
+        <div class="error-unit">${e.unit}</div>
+        <div class="error-unit">${e.last}</div>
+      </div>
+    </div>`).join('') + '</div>';
+}
+function clearErrors() {
+  if (!confirm('Fehlerliste wirklich löschen?')) return;
+  localStorage.removeItem(LS_ERRORS);
+  weightMap = {};
+  updateErrorBadge();
+  showErrors();
+}
+function downloadErrors() {
+  const errors = loadErrors();
+  const keys = Object.keys(errors);
+  if (keys.length === 0) { alert('Keine Fehler vorhanden.'); return; }
+  const sorted = keys.map(k => errors[k]).sort((a,b) => b.count - a.count);
+  const lines = ['Englisch\tDeutsch\tUnit\tFehler\tZuletzt',
+    ...sorted.map(e => `${e.en}\t${e.de}\t${e.unit}\t${e.count}×\t${e.last}`)];
+  const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Fehlerliste_VocabRacer.txt';
+  a.click();
+}
+
+// ════════════════════════════════════════════════
+//  GAME START
+// ════════════════════════════════════════════════
+function shuffle(a) {
+  for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function buildPool(unit) {
+  let base;
+  if (unit === 'Alle Units') {
+    base = Object.entries(VOCAB).flatMap(([u,words]) => words.map(v => ({...v, _unit: u})));
+  } else {
+    base = VOCAB[unit].map(v => ({...v, _unit: unit}));
+  }
+  // FIX: Shuffle einmal durch – KEINE Gewichtsduplizierung mehr im Pool.
+  // Fehlerwörter kommen NACH dem normalen Durchlauf nochmal dran (separater Nachpool).
+  return shuffle([...base]);
+}
+
+function buildAdaptiveAppend() {
+  // Nach jedem kompletten Durchlauf: Fehlerwörter einmal extra anhängen
+  const errors = loadErrors();
+  const keys = Object.keys(errors);
+  if (keys.length === 0) return [];
+  const base = currentUnit === 'Alle Units'
+    ? Object.values(VOCAB).flat()
+    : currentUnit === 'Fehlerwörter'
+      ? []
+      : VOCAB[currentUnit] || [];
+  const extra = base.filter(v => errors[v.en]).map(v => ({...v, _unit: v._unit || currentUnit}));
+  return shuffle(extra);
+}
+
+function startGame(unit) {
+  currentUnit = unit;
+  pool = buildPool(unit);
+  score = 0; streak = 0; totalAnswered = 0;
+  shownMilestones = new Set();
+  showScreen('game');
+  document.getElementById('unit-display').textContent = unit === 'Alle Units' ? 'Alle' : unit;
+  updateHUD();
+  setModeBadge();
+  nextQuestion();
+}
+
+function startErrorGame() {
+  const errors = loadErrors();
+  const keys = Object.keys(errors);
+  if (keys.length === 0) { alert('Keine Fehlerwörter gespeichert!'); return; }
+  currentUnit = 'Fehlerwörter';
+  pool = shuffle(keys.map(k => ({ en: errors[k].en, de: errors[k].de, _unit: errors[k].unit })));
+  score = 0; streak = 0; totalAnswered = 0;
+  shownMilestones = new Set();
+  showScreen('game');
+  document.getElementById('unit-display').textContent = '❌';
+  updateHUD();
+  setModeBadge();
+  nextQuestion();
+}
+
+function setModeBadge() {
+  const labels = {
+    mc: '🔘 Multiple Choice',
+    type: '✍️ Lückentext / Tippen',
+    match: '🔗 Zuordnung',
+    scramble: '🔡 Buchstaben-Scramble',
+    speed: '⏱️ Speed Round'
+  };
+  document.getElementById('mode-badge').textContent = labels[gameMode] || '';
+  document.getElementById('speed-timer-bar').style.display = gameMode === 'speed' ? 'block' : 'none';
+  document.getElementById('speed-bonus').style.display = gameMode === 'speed' ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════
+//  HUD
+// ════════════════════════════════════════════════
+function updateHUD() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('streak-display').textContent = streak;
+  document.getElementById('total-display').textContent = totalAnswered;
+  const pct = Math.min((score % 10) / 10 * 100, 100);
+  document.getElementById('track-fill').style.width = pct + '%';
+  document.getElementById('car-emoji').style.left = Math.max(0, pct - 5) + '%';
+}
+
+// ════════════════════════════════════════════════
+//  QUESTION ENGINE
+// ════════════════════════════════════════════════
+function nextQuestion() {
+  if (pool.length === 0) {
+    // FIX: Erst alle Vokabeln durch, dann Fehlerwörter als Bonus-Runde anhängen
+    pool = buildPool(currentUnit);
+    const extra = buildAdaptiveAppend();
+    if (extra.length > 0) pool = [...pool, ...extra];
+  }
+  currentQ = pool.pop();
+  answered = false;
+  clearFeedback();
+  if (speedTimer) clearInterval(speedTimer);
+
+  // Direction
+  let askDir = direction;
+  if (direction === 'mix') askDir = Math.random() < 0.5 ? 'de2en' : 'en2de';
+  currentQ._askDir = askDir;
+
+  const qWord  = askDir === 'de2en' ? currentQ.de : currentQ.en;
+  const answer = askDir === 'de2en' ? currentQ.en : currentQ.de;
+  currentQ._answer = answer;
+
+  // FIX: Fragekarte beim Matching ausblenden
+  const qCard = document.getElementById('question-card');
+  if (gameMode === 'match') {
+    qCard.style.display = 'none';
+  } else {
+    qCard.style.display = '';
+    document.getElementById('q-unit').textContent = currentQ._unit || currentUnit;
+    document.getElementById('q-dir').textContent  = askDir === 'de2en' ? '🇩🇪 Deutsch → Englisch' : '🇬🇧 Englisch → Deutsch';
+    document.getElementById('q-word').textContent = qWord;
+  }
+
+  // Render mode
+  if      (gameMode === 'mc')      renderMC(answer, askDir);
+  else if (gameMode === 'type')    renderType(answer);
+  else if (gameMode === 'match')   renderMatch(askDir);
+  else if (gameMode === 'scramble') renderScramble(answer);
+  else if (gameMode === 'speed')   renderSpeed(answer, askDir);
+}
+
+function getDistractors(answer, askDir, count) {
+  const allWords = currentUnit === 'Alle Units' || currentUnit === 'Fehlerwörter'
+    ? Object.values(VOCAB).flat()
+    : VOCAB[currentUnit] || [];
+  return shuffle(allWords.filter(v => (askDir === 'de2en' ? v.en : v.de) !== answer))
+    .slice(0, count)
+    .map(v => askDir === 'de2en' ? v.en : v.de);
+}
+
+// ── Multiple Choice ──────────────────────────
+function renderMC(answer, askDir) {
+  const wrong = getDistractors(answer, askDir, 3);
+  const opts  = shuffle([answer, ...wrong]);
+  const area  = document.getElementById('answer-area');
+  area.innerHTML = '<div class="answers" id="mc-answers"></div>';
+  const cont = document.getElementById('mc-answers');
+  opts.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'ans-btn'; b.textContent = opt;
+    b.onclick = () => checkMC(b, opt, answer);
+    cont.appendChild(b);
+  });
+}
+function checkMC(btn, chosen, correct) {
+  if (answered) return;
+  answered = true; totalAnswered++;
+  document.querySelectorAll('.ans-btn').forEach(b => { if (b.textContent === correct) b.classList.add('reveal'); });
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    handleCorrect();
+  } else {
+    btn.classList.add('wrong');
+    handleWrong(correct);
+  }
+}
+
+// ── Typing ───────────────────────────────────
+function renderType(answer) {
+  let hint = '';
+  if (difficulty === 'easy') hint = answer.slice(0, 2) + '…';
+  else if (difficulty === 'mid') hint = answer.slice(0, 1) + '…';
+
+  const area = document.getElementById('answer-area');
+  area.innerHTML = `
+    <div class="type-area">
+      ${hint ? `<div class="type-hint">💡 Tipp: <strong>${hint}</strong></div>` : ''}
+      <input class="type-input" id="type-input" type="text" placeholder="Antwort eingeben…" autocomplete="off" autocorrect="off" autocapitalize="off"/>
+      <button class="btn-submit" onclick="checkType()">✅ Prüfen</button>
+    </div>`;
+  const inp = document.getElementById('type-input');
+  inp.focus();
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') checkType(); });
+}
+function normalise(s) {
+  return s.trim().toLowerCase()
+    .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+    .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9 /().;,!?'-]/g,'');
+}
+function checkType() {
+  if (answered) return;
+  const inp = document.getElementById('type-input');
+  if (!inp) return;
+  const typed   = normalise(inp.value);
+  const correct = currentQ._answer;
+  // Accept if any semicolon-separated variant matches
+  const variants = correct.split(';').map(s => normalise(s));
+  const ok = variants.some(v => typed === v || typed === normalise(correct));
+  answered = true; totalAnswered++;
+  inp.disabled = true;
+  if (ok) {
+    inp.classList.add('correct-input');
+    handleCorrect();
+  } else {
+    inp.classList.add('wrong-input');
+    handleWrong(correct);
+  }
+}
+
+// ── Matching ─────────────────────────────────
+let matchSelected = null;
+function renderMatch(askDir) {
+  // Pick 6 words
+  const allWords = currentUnit === 'Alle Units' || currentUnit === 'Fehlerwörter'
+    ? Object.values(VOCAB).flat() : VOCAB[currentUnit] || [];
+  const sample = shuffle([...allWords]).slice(0, 6);
+  // Make sure currentQ is in sample
+  const base = currentQ._askDir === 'de2en' ? currentQ : currentQ;
+  if (!sample.find(v => v.en === currentQ.en)) { sample[0] = {en: currentQ.en, de: currentQ.de}; }
+
+  const leftWords  = shuffle(sample.map(v => askDir === 'de2en' ? v.de : v.en));
+  const rightWords = shuffle(sample.map(v => askDir === 'de2en' ? v.en : v.de));
+  // Build lookup
+  const pairMap = {};
+  sample.forEach(v => {
+    const l = askDir === 'de2en' ? v.de : v.en;
+    const r = askDir === 'de2en' ? v.en : v.de;
+    pairMap[l] = r; pairMap[r] = l;
+  });
+
+  matchSelected = null;
+  const area = document.getElementById('answer-area');
+  area.innerHTML = `<div class="match-container">
+    <div class="match-col" id="match-left">${leftWords.map(w=>`<div class="match-item" data-word="${w}" data-side="left" onclick="matchClick(this)">${w}</div>`).join('')}</div>
+    <div class="match-col" id="match-right">${rightWords.map(w=>`<div class="match-item" data-word="${w}" data-side="right" onclick="matchClick(this)">${w}</div>`).join('')}</div>
+  </div>`;
+
+  // Store pair map on area
+  area._pairMap = pairMap;
+  area._matchedCount = 0;
+  area._totalPairs = sample.length;
+}
+
+function matchClick(el) {
+  if (el.classList.contains('matched')) return;
+  const area = document.getElementById('answer-area');
+
+  if (!matchSelected) {
+    // First selection
+    document.querySelectorAll('.match-item.selected').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    matchSelected = el;
+  } else {
+    if (matchSelected === el) { el.classList.remove('selected'); matchSelected = null; return; }
+    if (matchSelected.dataset.side === el.dataset.side) {
+      // Same side – switch
+      document.querySelectorAll('.match-item.selected').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected'); matchSelected = el; return;
+    }
+    // Check pair
+    const a = matchSelected.dataset.word;
+    const b = el.dataset.word;
+    const correct = area._pairMap[a] === b;
+    if (correct) {
+      matchSelected.classList.remove('selected'); matchSelected.classList.add('matched');
+      el.classList.add('matched');
+      area._matchedCount++;
+      totalAnswered++;
+      if (area._matchedCount === area._totalPairs) {
+        // FIX: Score zählt jetzt pro Paar (6 Paare = 6 Punkte), nicht pro Runde
+        score += area._totalPairs;
+        streak++;
+        showFeedback('✅ Alle Paare gefunden! ' + (streak>2?'🔥 '+streak+'er Streak!':''), true);
+        updateHUD(); checkMilestone();
+        setTimeout(nextQuestion, 1200);
+      }
+    } else {
+      matchSelected.classList.remove('selected');
+      matchSelected.classList.add('wrong-match'); el.classList.add('wrong-match');
+      streak = 0; updateHUD();
+      // FIX: Fehlerwort korrekt speichern beim Matching
+      const wrongVocab = { en: matchSelected.dataset.word, de: el.dataset.word, _unit: currentQ._unit || currentUnit };
+      // Versuche das echte Vokabel-Objekt zu finden
+      const allWords = Object.values(VOCAB).flat();
+      const foundVocab = allWords.find(v => v.en === matchSelected.dataset.word || v.en === el.dataset.word);
+      if (foundVocab) recordError(foundVocab, currentQ._unit || currentUnit);
+      setTimeout(() => {
+        matchSelected && matchSelected.classList.remove('wrong-match');
+        el.classList.remove('wrong-match');
+        matchSelected = null;
+      }, 600);
+      return;
+    }
+    matchSelected = null;
+  }
+}
+
+// ── Scramble ─────────────────────────────────
+let scrambleLetters = [], scrambleChosen = [];
+function renderScramble(answer) {
+  // Use first variant only
+  const target = answer.split(';')[0].trim();
+  scrambleLetters = shuffle(target.split('').map((c,i) => ({c, i, used: false})));
+  scrambleChosen  = [];
+
+  const area = document.getElementById('answer-area');
+  area.innerHTML = `
+    <div class="scramble-area">
+      <div class="scramble-answer" id="scramble-answer">
+        <span style="color:#555;font-size:0.9rem;">Buchstaben antippen…</span>
+      </div>
+      <div class="scramble-letters" id="scramble-letters"></div>
+      <div>
+        <button class="btn-clear" onclick="scrambleClear()">🔄 Reset</button>
+        <button class="btn-submit" onclick="checkScramble()">✅ Prüfen</button>
+      </div>
+    </div>`;
+  renderScrambleLetters();
+  // Store target
+  document.getElementById('answer-area')._target = target;
+}
+function renderScrambleLetters() {
+  const cont = document.getElementById('scramble-letters');
+  if (!cont) return;
+  cont.innerHTML = scrambleLetters.map((l,i) =>
+    `<button class="letter-btn ${l.used?'used':''}" onclick="scramblePick(${i})">${l.c}</button>`
+  ).join('');
+  const ans = document.getElementById('scramble-answer');
+  if (ans) {
+    if (scrambleChosen.length === 0) {
+      ans.innerHTML = '<span style="color:#555;font-size:0.9rem;">Buchstaben antippen…</span>';
+    } else {
+      ans.innerHTML = scrambleChosen.map((l,i) =>
+        `<span class="answer-letter" onclick="scrambleRemove(${i})">${l.c}</span>`
+      ).join('');
+    }
+  }
+}
+function scramblePick(i) {
+  if (answered || scrambleLetters[i].used) return;
+  scrambleLetters[i].used = true;
+  scrambleChosen.push({...scrambleLetters[i], srcIdx: i});
+  renderScrambleLetters();
+}
+function scrambleRemove(i) {
+  if (answered) return;
+  const item = scrambleChosen.splice(i, 1)[0];
+  scrambleLetters[item.srcIdx].used = false;
+  renderScrambleLetters();
+}
+function scrambleClear() {
+  scrambleLetters.forEach(l => l.used = false);
+  scrambleChosen = [];
+  renderScrambleLetters();
+}
+function checkScramble() {
+  if (answered) return;
+  const target = document.getElementById('answer-area')._target;
+  const typed  = scrambleChosen.map(l => l.c).join('');
+  answered = true; totalAnswered++;
+  const ans = document.getElementById('scramble-answer');
+  if (typed.toLowerCase() === target.toLowerCase()) {
+    if (ans) ans.classList.add('correct-scramble');
+    handleCorrect();
+  } else {
+    if (ans) ans.classList.add('wrong-scramble');
+    handleWrong(currentQ._answer);
+  }
+}
+
+// ── Speed Round ───────────────────────────────
+const SPEED_SECONDS = { easy: 8, mid: 5, hard: 3 };
+function renderSpeed(answer, askDir) {
+  // Render like MC but with timer
+  renderMC(answer, askDir);
+  // Override click handlers to include bonus
+  document.querySelectorAll('.ans-btn').forEach(b => {
+    b.onclick = () => checkSpeed(b, b.textContent, answer);
+  });
+  // Start timer
+  speedTimeLeft = SPEED_SECONDS[difficulty];
+  updateSpeedBar();
+  speedTimer = setInterval(() => {
+    speedTimeLeft -= 0.1;
+    updateSpeedBar();
+    if (speedTimeLeft <= 0) {
+      clearInterval(speedTimer);
+      if (!answered) {
+        answered = true; totalAnswered++;
+        streak = 0; updateHUD();
+        document.querySelectorAll('.ans-btn').forEach(b => { if(b.textContent === answer) b.classList.add('reveal'); });
+        showFeedback('⏰ Zeit abgelaufen! Richtig: ' + answer, false);
+        if (currentQ && currentQ.en && currentQ.de) {
+    recordError({ en: currentQ.en, de: currentQ.de }, currentQ._unit || currentUnit);
+  }
+        setTimeout(nextQuestion, 1800);
+      }
+    }
+  }, 100);
+}
+function updateSpeedBar() {
+  const total = SPEED_SECONDS[difficulty];
+  const pct   = Math.max(0, speedTimeLeft / total * 100);
+  const bar   = document.getElementById('speed-timer-fill');
+  if (bar) bar.style.width = pct + '%';
+  const bonus = document.getElementById('speed-bonus');
+  if (bonus) {
+    const b = Math.ceil(speedTimeLeft);
+    bonus.textContent = speedTimeLeft > 0 ? `⚡ Noch ${b}s – schnell = mehr Punkte!` : '';
+  }
+}
+function checkSpeed(btn, chosen, correct) {
+  if (answered) return;
+  clearInterval(speedTimer);
+  answered = true; totalAnswered++;
+  document.querySelectorAll('.ans-btn').forEach(b => { if(b.textContent === correct) b.classList.add('reveal'); });
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    // Bonus: extra point if answered in first half of time
+    const bonusPoint = speedTimeLeft > SPEED_SECONDS[difficulty] / 2;
+    score += bonusPoint ? 2 : 1;
+    streak++;
+    showFeedback('✅ Richtig!' + (bonusPoint ? ' ⚡ Bonus-Punkt!' : '') + (streak>2?' 🔥 '+streak+'er Streak!':''), true);
+    updateHUD(); checkMilestone(bonusPoint);
+    setTimeout(nextQuestion, 1100);
+  } else {
+    btn.classList.add('wrong');
+    handleWrong(correct);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  RESULT HANDLERS
+// ════════════════════════════════════════════════
+function handleCorrect() {
+  score++; streak++;
+  showFeedback('✅ Richtig! ' + (streak > 2 ? '🔥 ' + streak + 'er Streak!' : ''), true);
+  updateHUD(); checkMilestone();
+  setTimeout(nextQuestion, 1100);
+}
+function handleWrong(correct) {
+  streak = 0;
+  showFeedback('❌ Falsch! Richtig: ' + correct, false);
+  updateHUD();
+  // FIX: Sicherstellen dass currentQ immer gespeichert wird
+  if (currentQ && currentQ.en && currentQ.de) {
+    recordError({ en: currentQ.en, de: currentQ.de }, currentQ._unit || currentUnit);
+  }
+  setTimeout(nextQuestion, 1900);
+}
+function showFeedback(msg, ok) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'feedback ' + (ok ? 'correct-fb' : 'wrong-fb');
+}
+function clearFeedback() {
+  const el = document.getElementById('feedback');
+  el.textContent = ''; el.className = 'feedback';
+}
+
+// ════════════════════════════════════════════════
+//  MILESTONE
+// ════════════════════════════════════════════════
+function checkMilestone() {
+  MILESTONES.forEach(m => {
+    if (score >= m.at && !shownMilestones.has(m.at)) {
+      shownMilestones.add(m.at);
+      showMilestone(m);
+    }
+  });
+}
+function showMilestone(m) {
+  launchConfetti();
+  document.getElementById('ms-emoji').textContent  = m.emoji;
+  document.getElementById('ms-title').textContent  = m.title;
+  document.getElementById('ms-score').textContent  = score + ' Vokabeln richtig!';
+  document.getElementById('ms-reward').textContent = m.reward;
+  document.getElementById('milestone-popup').classList.add('show');
+}
+function closeMilestone() {
+  document.getElementById('milestone-popup').classList.remove('show');
+  nextQuestion();
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome() {
+  if (speedTimer) clearInterval(speedTimer);
+  showScreen('home');
+  updateErrorBadge();
+}
+
+// ════════════════════════════════════════════════
+//  CONFETTI
+// ════════════════════════════════════════════════
+function launchConfetti() {
+  const colors = ['#f39c12','#e74c3c','#2ecc71','#3498db','#9b59b6','#1abc9c'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top  = '-20px';
+    el.style.background = colors[Math.random() * colors.length | 0];
+    el.style.animationDelay = (Math.random()) + 's';
+    el.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+updateErrorBadge();
+</script>
+</body>
+</html>
