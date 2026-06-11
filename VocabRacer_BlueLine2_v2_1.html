@@ -791,8 +791,6 @@ function recordError(vocab, unit) {
   errors[key].last = new Date().toLocaleDateString('de-DE');
   saveErrors(errors);
   updateErrorBadge();
-  // increase adaptive weight
-  weightMap[vocab.en] = (weightMap[vocab.en] || 1) + 2;
 }
 function updateErrorBadge() {
   const errors = loadErrors();
@@ -862,13 +860,8 @@ function buildPool(unit) {
   } else {
     base = VOCAB[unit].map(v => ({...v, _unit: unit}));
   }
-  // Adaptive: expand pool by weight
-  let weighted = [];
-  base.forEach(v => {
-    const w = weightMap[v.en] || 1;
-    for (let i = 0; i < w; i++) weighted.push({...v});
-  });
-  return shuffle(weighted);
+  // KEIN adaptives Gewicht – einfach einmal durch, dann neu mischen
+  return shuffle([...base]);
 }
 
 function startGame(unit) {
@@ -942,9 +935,16 @@ function nextQuestion() {
   const answer = askDir === 'de2en' ? currentQ.en : currentQ.de;
   currentQ._answer = answer;
 
-  document.getElementById('q-unit').textContent = currentQ._unit || currentUnit;
-  document.getElementById('q-dir').textContent  = askDir === 'de2en' ? '🇩🇪 Deutsch → Englisch' : '🇬🇧 Englisch → Deutsch';
-  document.getElementById('q-word').textContent = qWord;
+  // FIX: Fragekarte beim Matching ausblenden
+  const qCard = document.getElementById('question-card');
+  if (gameMode === 'match') {
+    qCard.style.display = 'none';
+  } else {
+    qCard.style.display = '';
+    document.getElementById('q-unit').textContent = currentQ._unit || currentUnit;
+    document.getElementById('q-dir').textContent  = askDir === 'de2en' ? '🇩🇪 Deutsch → Englisch' : '🇬🇧 Englisch → Deutsch';
+    document.getElementById('q-word').textContent = qWord;
+  }
 
   // Render mode
   if      (gameMode === 'mc')      renderMC(answer, askDir);
@@ -1093,7 +1093,8 @@ function matchClick(el) {
       area._matchedCount++;
       totalAnswered++;
       if (area._matchedCount === area._totalPairs) {
-        score++; streak++;
+        // FIX: 1 Punkt pro Paar (6 Paare = 6 Punkte)
+        score += area._totalPairs; streak++;
         showFeedback('✅ Alle Paare gefunden! ' + (streak>2?'🔥 '+streak+'er Streak!':''), true);
         updateHUD(); checkMilestone();
         setTimeout(nextQuestion, 1200);
@@ -1102,7 +1103,10 @@ function matchClick(el) {
       matchSelected.classList.remove('selected');
       matchSelected.classList.add('wrong-match'); el.classList.add('wrong-match');
       streak = 0; updateHUD();
-      recordError(currentQ, currentQ._unit || currentUnit);
+      // FIX: richtiges Vokabel beim Matching speichern
+      const allW = Object.values(VOCAB).flat();
+      const eV = allW.find(v => v.en === matchSelected.dataset.word || v.de === matchSelected.dataset.word || v.en === el.dataset.word || v.de === el.dataset.word);
+      if (eV) recordError(eV, currentQ._unit || currentUnit);
       setTimeout(() => {
         matchSelected && matchSelected.classList.remove('wrong-match');
         el.classList.remove('wrong-match');
@@ -1259,7 +1263,10 @@ function handleWrong(correct) {
   streak = 0;
   showFeedback('❌ Falsch! Richtig: ' + correct, false);
   updateHUD();
-  recordError(currentQ, currentQ._unit || currentUnit);
+  // FIX: nur speichern wenn gültiges Objekt vorhanden
+  if (currentQ && currentQ.en && currentQ.de) {
+    recordError({ en: currentQ.en, de: currentQ.de }, currentQ._unit || currentUnit);
+  }
   setTimeout(nextQuestion, 1900);
 }
 function showFeedback(msg, ok) {
